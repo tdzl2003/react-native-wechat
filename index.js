@@ -7,7 +7,7 @@ const WeChat = NativeModules.WeChat;
 // Used only with promisify. Transform callback to promise result.
 function translateError(err, result) {
   if (!err) {
-    this.resolve(result);
+    return this.resolve(result);
   }
   if (typeof err === 'object') {
     if (err instanceof Error) {
@@ -98,5 +98,5 @@ export function sendAuthRequest(scopes, state) {
   }
   const _state = state || Math.random().toString(16).substr(2) + '_' + new Date().getTime();
   return nativeSendAuthRequest(_scopes, _state)
-    .then(() => waitForAuthResponse(state, resolve));
+    .then(() => waitForAuthResponse(_state));
 }

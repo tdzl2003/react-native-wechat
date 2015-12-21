@@ -11,17 +11,44 @@
 #import "RCTWeChat.h"
 #import "WXApi.h"
 #import "WXApiObject.h"
+#import "Base/RCTEventDispatcher.h"
 
 #define NOT_REGISTERED (@"registerApp required.")
 #define INVOKE_FAILED (@"WeChat API invoke returns false.")
 
+@interface RCTWeChat()<WXApiDelegate> {
+}
+
+@property (nonatomic, strong) NSString *appID;
+@property (nonatomic, strong) NSString *appSecret;
+
+@end
+
+
 @implementation RCTWeChat
 
+@synthesize bridge = _bridge;
+
 RCT_EXPORT_MODULE()
+
+- (dispatch_queue_t)methodQueue
+{
+    return dispatch_get_main_queue();
+}
+
+//- (instancetype)init
+//{
+//    self = [super init];
+//    if (self) {
+//        [self registerAPI];
+//    }
+//    return self;
+//}
 
 RCT_EXPORT_METHOD(registerApp:(NSString *)appid
                   :(RCTResponseSenderBlock)callback)
 {
+    self.appID = appid;
     callback(@[[WXApi registerApp:appid] ? [NSNull null] : INVOKE_FAILED]);
 }
 
@@ -29,6 +56,7 @@ RCT_EXPORT_METHOD(registerAppWithDescription:(NSString *)appid
                   :(NSString *)appdesc
                   :(RCTResponseSenderBlock)callback)
 {
+    self.appID = appid;
     callback(@[[WXApi registerApp:appid withDescription:appdesc] ? [NSNull null] : INVOKE_FAILED]);
 }
 
@@ -72,7 +100,8 @@ RCT_EXPORT_METHOD(sendAuthRequest:(NSString *)scope
     SendAuthReq* req = [[SendAuthReq alloc] init];
     req.scope = scope;
     req.state = state;
-    callback(@[[WXApi sendReq:req] ? [NSNull null] : INVOKE_FAILED]);
+    BOOL success = [WXApi sendReq:req];
+    callback(@[success ? [NSNull null] : INVOKE_FAILED]);
 }
 
 RCT_EXPORT_METHOD(sendSuccessResponse:(RCTResponseSenderBlock)callback)
@@ -99,5 +128,79 @@ RCT_EXPORT_METHOD(sendErrorUserCancelResponse:(NSString *)message
     resp.errStr = message;
     callback(@[[WXApi sendResp:resp] ? [NSNull null] : INVOKE_FAILED]);
 }
+
+- (BOOL)handleUrl:(NSURL *)aUrl
+{
+    if ([WXApi handleOpenURL:aUrl delegate:self])
+    {
+        return YES;
+    }
+    return NO;
+}
+
+
+//- (void)registerAPI
+//{
+//    static dispatch_once_t onceToken;
+//    dispatch_once(&onceToken, ^{
+//        NSString *appId = nil;
+//        NSArray *list = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"CFBundleURLTypes"];
+//        for (NSDictionary *item in list) {
+//            NSString *name = item[@"CFBundleURLName"];
+//            if ([name isEqualToString:@"weixin"]) {
+//                NSArray *schemes = item[@"CFBundleURLSchemes"];
+//                if (schemes.count > 0)
+//                {
+//                    appId = schemes[0];
+//                    break;
+//                }
+//            }
+//        }
+//        [WXApi registerApp:appId];
+//    });
+//}
+
+#pragma mark - wx callback
+-(void) onReq:(BaseReq*)req
+{
+    
+}
+
+-(void) onResp:(BaseResp*)resp
+{
+    if([resp isKindOfClass:[SendMessageToWXResp class]])
+    {
+        if (resp.errCode == WXSuccess)
+        {
+//            self.callBackShare(@[[NSNull null]]);
+        }
+        else if(resp.errCode != WXErrCodeUserCancel)
+        {
+//            self.callBackShare(@[@{@"err":@(-1001),@"errMsg":@"Canceled."}]);
+        }
+    }
+    else if ([resp isKindOfClass:[SendAuthResp class]]) {
+        SendAuthResp *r = (SendAuthResp *)resp;
+        NSMutableDictionary *body = @{@"errCode":@(r.errCode)}.mutableCopy;
+        body[@"errStr"] = r.errStr;
+        body[@"state"] = r.state;
+        body[@"lang"] = r.lang;
+        body[@"country"] =r.country;
+        body[@"type"] = @"SendAuth.Resp";
+        
+        if (resp.errCode == WXSuccess)
+        {
+            [body addEntriesFromDictionary:@{@"appid":self.appID, @"code" :r.code}];
+            [self.bridge.eventDispatcher sendDeviceEventWithName:@"WeChat_Resp" body:body];
+        }
+        else {
+            [self.bridge.eventDispatcher sendDeviceEventWithName:@"WeChat_Resp" body:body];
+        }
+    }
+    //    else if([resp isKindOfClass:[PayResp class]]) {
+    //
+    //    }
+}
+
 
 @end

@@ -11,4 +11,6 @@
 
 @interface RCTWeChat : NSObject <RCTBridgeModule>
 
+- (BOOL)handleUrl:(NSURL *)aUrl;
+
 @end
