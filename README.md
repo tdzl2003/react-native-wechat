@@ -3,17 +3,19 @@
 React-Native bridge static library for WeChat SDK.
 
 - [x] iOS
-- [ ] Android
+- [x] Android
 
-## Installation
+## Join us at Gitter
 
 [![Join the chat at https://gitter.im/weflex/react-native-wechat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/weflex/react-native-wechat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+## Installation
 
 ```sh
 $ npm install react-native-wechat --save
 ```
 
-## Linking in your XCode project
+## iOS: Linking in your XCode project
 
 - Link `RCTWeChat` library from your `node_modules/react-native-wechat/ios` folder like its
   [described here](http://facebook.github.io/react-native/docs/linking-libraries-ios.html).
@@ -24,7 +26,7 @@ $ npm install react-native-wechat --save
   - [x] libc++
   - [x] libz
 
-## Linking to your gradle Project(Android)
+## Android: Linking to your gradle Project
 
 - Add following lines into `android/settings.gradle`
 
@@ -54,14 +56,14 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         ...
         mReactInstanceManager = ReactInstanceManager.builder()
-                .setApplication(getApplication())
-                .setBundleAssetName("index.android.bundle")
-                .setJSMainModuleName("index.android")
-                .addPackage(new MainReactPackage())
-                .addPackage(new WeChatPackage())        // Add this line
-                .setUseDeveloperSupport(BuildConfig.DEBUG)
-                .setInitialLifecycleState(LifecycleState.RESUMED)
-                .build();
+            .setApplication(getApplication())
+            .setBundleAssetName("index.android.bundle")
+            .setJSMainModuleName("index.android")
+            .addPackage(new MainReactPackage())
+            .addPackage(new WeChatPackage())        // Add this line
+            .setUseDeveloperSupport(BuildConfig.DEBUG)
+            .setInitialLifecycleState(LifecycleState.RESUMED)
+            .build();
     }
 }
 ```
@@ -93,7 +95,7 @@ public class WXEntryActivity extends Activity{
   ...
   <application>
     ...
-    <!-- Î¢ÐÅActivity -->
+    <!-- å¾®ä¿¡Activity -->
     <activity
       android:name=".wxapi.WXEntryActivity"
       android:label="@string/app_name"
@@ -113,96 +115,62 @@ public class WXEntryActivity extends Activity{
 
 ## API Documentation
 
-#### registerApp(appid[, callback])
+#### registerApp(appid)
 
 - {String} `appid` the appid you get from WeChat dashboard
-- {Function} `callback` - the result callback.
-  - {Boolean} `result` - Whether this operation is successful.
 - returns {Promise} 
 
-#### registerAppWithDescription(appid, appdesc[, callback])
+#### registerAppWithDescription(appid, appdesc)
 
 Only available on iOS.
 
 - {String} `appid` the appid you get from WeChat dashboard
 - {String} `appdesc` the description of your app
-- {Function} `callback` - the result callback.
-  - {Boolean} `result` - Whether this operation is successful.
 - returns {Promise} 
 
-#### isWXAppInstalled([callback]) 
+#### isWXAppInstalled() 
 
 Check if wechat installed in this app.
 
-- {Function} `callback` - the result callback.
-  - {Boolean} `installed` - the result.
-- returns {Promise} 
+- returns {Promise} Contain the result.
 
-#### isWXAppSupportApi([callback])
+#### isWXAppSupportApi()
 
 Check if wechat support open url.
 
-- {Function} `callback` - the same to `isWXAppInstalled`.
-- returns {Promise} 
+- returns {Promise}  Contain the result.
 
-#### getApiVersion([callback])
+#### getApiVersion()
 
 Get api version of WeChat SDK.
 
-- {Function} `callback`
-  - {Error} `err` the error if something went wrong
-  - {String} `version` the result
-- returns {Promise} 
+- returns {Promise}  Contain the result.
 
-#### openWXApp([callback])
+#### openWXApp()
 
 Open WeChat app with an optional callback argument.
 
-- {Function} `callback` callback
 - returns {Promise} 
 
-#### sendRequest(openid[, callback])
-
-Send request to WeChat with an `openid`.
-
-- {String} `openid` the user openid
-- {Function} `callback` the callback
-- returns {Promise} 
-
-#### sendAuthRequest(state[, callback])
+#### sendAuthRequest(scope, state)
 
 Send authentication request.
 
+- {Array|String} `scope` Scopes of auth request.
 - {String} `state` the state of OAuth2
-- {Function} `callback` callback
-- returns {Promise} 
-
-#### sendSuccessResponse([callback])
-
-Send a success response.
-
-- {Function} `callback` callback
-- returns {Promise} 
-
-#### sendErrorCommonResponse(message, callback)
-
-Send an error response to WeChat app.
-
-- {String} `message` the error message
-- {Function} `callback` callback
-- returns {Promise} 
-
-#### sendErrorUserCancelResponse(message, callback)
-
-Send an error becaosue cancelation by user to WeChat.
-
-- {String} `message` the error message
-- {Function} `callback` callback
-- returns {Promise} 
+- returns {Promise} Contain a object returned by WeChat 
+    - code {String} Authorize code
+    - url {String}
+    - lang {String}
+    - country {String}
 
 For more details, visit [WeChat SDK Documentation](https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify=1&id=1417674108&token=&lang=zh_CN)
+
+## Authors
+
+- [Yorkie Liu](https://github.com/yorkie) from [WeFlex](https://github.com/weflex)
+- [Deng Yun](https://github.com/tdzl2003) from [React-Native-CN](https://github.com/reactnativecn)
 
 ## License
 
 MIT @ WeFlex,Inc
-
