@@ -42,6 +42,11 @@ DeviceEventEmitter.addListener('WeChat_Resp', resp => {
     delete authCallbackList[resp.state];
     return callback && callback(resp);
   }
+  else if(resp.type === 'SendMessageToWX.Resp') {
+    const callback = authCallbackList[resp.state];
+    delete authCallbackList[resp.state];
+    return callback && callback(resp);
+  }
   if (__DEV__) {
     throw new Error('Unsupported response type: ' + resp.type);
   }
@@ -88,6 +93,10 @@ export const getApiVersion = wrapApi(WeChat.getApiVersion);
 
 export const openWXApp = wrapApi(WeChat.openWXApp);
 
+const nativeShareToTimelineRequest = wrapApi(WeChat.shareToTimeline);
+
+const nativeShareToSessionRequest = wrapApi(WeChat.shareToSession);
+
 const nativeSendAuthRequest = wrapApi(WeChat.sendAuthRequest);
 
 export function sendAuthRequest(scopes, state) {
@@ -99,4 +108,18 @@ export function sendAuthRequest(scopes, state) {
   const _state = state || Math.random().toString(16).substr(2) + '_' + new Date().getTime();
   return nativeSendAuthRequest(_scopes, _state)
     .then(() => waitForAuthResponse(_state));
+}
+
+export function shareToTimelineRequest(data) {
+  // Generate a random, unique state if not provided.
+  const _state = Math.random().toString(16).substr(2) + '_' + new Date().getTime();
+  return nativeShareToTimelineRequest(data)
+      .then(() => waitForAuthResponse(_state));
+}
+
+export function shareToSessionRequest(data) {
+  // Generate a random, unique state if not provided.
+  const _state = Math.random().toString(16).substr(2) + '_' + new Date().getTime();
+  return nativeShareToSessionRequest(data)
+      .then(() => waitForAuthResponse(_state));
 }

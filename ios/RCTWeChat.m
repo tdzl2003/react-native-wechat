@@ -12,6 +12,8 @@
 #import "WXApi.h"
 #import "WXApiObject.h"
 #import "Base/RCTEventDispatcher.h"
+#import "RCTBridge.h"
+#import "RCTImageLoader.h"
 
 #define NOT_REGISTERED (@"registerApp required.")
 #define INVOKE_FAILED (@"WeChat API invoke returns false.")
@@ -129,6 +131,18 @@ RCT_EXPORT_METHOD(sendErrorUserCancelResponse:(NSString *)message
     callback(@[[WXApi sendResp:resp] ? [NSNull null] : INVOKE_FAILED]);
 }
 
+RCT_EXPORT_METHOD(shareToTimeline:(NSDictionary *)data
+                  :(RCTResponseSenderBlock)callback)
+{
+    [self shareToWeixinWithData:data scene:WXSceneTimeline callback:callback];
+}
+
+RCT_EXPORT_METHOD(shareToSession:(NSDictionary *)data
+                  :(RCTResponseSenderBlock)callback)
+{
+    [self shareToWeixinWithData:data scene:WXSceneSession callback:callback];
+}
+
 - (BOOL)handleUrl:(NSURL *)aUrl
 {
     if ([WXApi handleOpenURL:aUrl delegate:self])
@@ -136,6 +150,88 @@ RCT_EXPORT_METHOD(sendErrorUserCancelResponse:(NSString *)message
         return YES;
     }
     return NO;
+}
+
+- (void)shareToWeixinWithData:(NSDictionary *)aData thumbImage:(UIImage *)aThumbImage scene:(int)aScene callBack:(RCTResponseSenderBlock)callback
+{
+    SendMessageToWXReq* req = [SendMessageToWXReq new];
+    req.scene = aScene;
+    
+    NSString *type = aData[RCTWXShareType];
+    
+    if ([type isEqualToString:RCTWXShareTypeText]) {
+        req.bText = YES;
+        
+        NSString *text = aData[RCTWXShareDescription];
+        if (text && [text isKindOfClass:[NSString class]]) {
+            req.text = text;
+        }
+    }
+    else {
+        req.bText = NO;
+        
+        WXMediaMessage* mediaMessage = [WXMediaMessage new];
+        
+        mediaMessage.title = aData[RCTWXShareTitle];
+        mediaMessage.description = aData[RCTWXShareDescription];
+        mediaMessage.mediaTagName = aData[@"mediaTagName"];
+        mediaMessage.messageAction = aData[@"messageAction"];
+        mediaMessage.messageExt = aData[@"messageExt"];
+        
+        [mediaMessage setThumbImage:aThumbImage];
+        
+        if (type.length <= 0 || [type isEqualToString:RCTWXShareTypeNews]) {
+            WXWebpageObject* webpageObject = [WXWebpageObject new];
+            webpageObject.webpageUrl = aData[RCTWXShareWebpageUrl];
+            mediaMessage.mediaObject = webpageObject;
+            
+            if (webpageObject.webpageUrl.length<=0) {
+                callback(@[@"webpageUrl不能为空"]);
+                return;
+            }
+        }
+        else if ([type isEqualToString:RCTWXShareTypeAudio]) {
+            WXMusicObject *musicObject = [WXMusicObject new];
+            musicObject.musicUrl = aData[@"musicUrl"];
+            musicObject.musicLowBandUrl = aData[@"musicLowBandUrl"];
+            musicObject.musicDataUrl = aData[@"musicDataUrl"];
+            musicObject.musicLowBandDataUrl = aData[@"musicLowBandDataUrl"];
+            mediaMessage.mediaObject = musicObject;
+        }
+        else if ([type isEqualToString:RCTWXShareTypeVideo]) {
+            WXVideoObject *videoObject = [WXVideoObject new];
+            videoObject.videoUrl = aData[@"videoUrl"];
+            videoObject.videoLowBandUrl = aData[@"videoLowBandUrl"];
+            mediaMessage.mediaObject = videoObject;
+        }
+        else if ([type isEqualToString:RCTWXShareTypeImage]) {
+            WXImageObject *imageObject = [WXImageObject new];
+            imageObject.imageUrl = aData[RCTWXShareImageUrl];
+            mediaMessage.mediaObject = imageObject;
+        }
+        req.message = mediaMessage;
+    }
+    
+    BOOL success = [WXApi sendReq:req];
+    if (success == NO)
+    {
+        callback(@[INVOKE_FAILED]);
+    }
+}
+
+
+- (void)shareToWeixinWithData:(NSDictionary *)aData scene:(int)aScene callback:(RCTResponseSenderBlock)aCallBack
+{
+    NSString *imageUrl = aData[@"thumbImage"];
+    if (imageUrl.length && _bridge.imageLoader) {
+        [_bridge.imageLoader loadImageWithTag:imageUrl size:CGSizeMake(100, 100) scale:1 resizeMode:UIViewContentModeScaleToFill progressBlock:nil completionBlock:^(NSError *error, UIImage *image) {
+            [self shareToWeixinWithData:aData thumbImage:image scene:aScene callBack:aCallBack];
+        }];
+    }
+    else {
+        [self shareToWeixinWithData:aData thumbImage:nil scene:aScene callBack:aCallBack];
+    }
+    
 }
 
 
@@ -170,14 +266,14 @@ RCT_EXPORT_METHOD(sendErrorUserCancelResponse:(NSString *)message
 {
     if([resp isKindOfClass:[SendMessageToWXResp class]])
     {
-        if (resp.errCode == WXSuccess)
-        {
-//            self.callBackShare(@[[NSNull null]]);
-        }
-        else if(resp.errCode != WXErrCodeUserCancel)
-        {
-//            self.callBackShare(@[@{@"err":@(-1001),@"errMsg":@"Canceled."}]);
-        }
+        SendMessageToWXResp *r = (SendMessageToWXResp *)resp;
+        
+        NSMutableDictionary *body = @{@"errCode":@(r.errCode)}.mutableCopy;
+        body[@"errStr"] = r.errStr;
+        body[@"lang"] = r.lang;
+        body[@"country"] =r.country;
+        body[@"type"] = @"SendMessageToWX.Resp";
+        [self.bridge.eventDispatcher sendDeviceEventWithName:@"WeChat_Resp" body:body];
     }
     else if ([resp isKindOfClass:[SendAuthResp class]]) {
         SendAuthResp *r = (SendAuthResp *)resp;
