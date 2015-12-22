@@ -21,10 +21,17 @@ function translateError(err, result) {
 }
 
 // Save callback and wait for future event.
-const authCallbackList = {};
-function waitForAuthResponse(state) {
+let savedCallback = undefined;
+function waitForResponse(type) {
   return new Promise((resolve, reject) => {
-    authCallbackList[state] = result => {
+    if (savedCallback) {
+      savedCallback('User canceled.');
+    }
+    savedCallback = result => {
+      if (resp.type !== type) {
+        return;
+      }
+      savedCallback = undefined;
       if (result.errCode !== 0) {
         const err = new Error(result.errMsg);
         err.errCode = result.errCode;
@@ -37,16 +44,9 @@ function waitForAuthResponse(state) {
 }
 
 DeviceEventEmitter.addListener('WeChat_Resp', resp => {
-  if (resp.type === 'SendAuth.Resp') {
-    const callback = authCallbackList[resp.state];
-    delete authCallbackList[resp.state];
-    return callback && callback(resp);
-  }
-  else if(resp.type === 'SendMessageToWX.Resp') {
-    const callback = authCallbackList[resp.state];
-    delete authCallbackList[resp.state];
-    return callback && callback(resp);
-  }
+  const callback = savedCallback;
+  savedCallback = undefined;
+  callback(resp);
   if (__DEV__) {
     throw new Error('Unsupported response type: ' + resp.type);
   }
@@ -107,19 +107,15 @@ export function sendAuthRequest(scopes, state) {
   }
   const _state = state || Math.random().toString(16).substr(2) + '_' + new Date().getTime();
   return nativeSendAuthRequest(_scopes, _state)
-    .then(() => waitForAuthResponse(_state));
+    .then(() => waitForResponse('SendAuth.Resp'));
 }
 
 export function shareToTimelineRequest(data) {
-  // Generate a random, unique state if not provided.
-  const _state = Math.random().toString(16).substr(2) + '_' + new Date().getTime();
   return nativeShareToTimelineRequest(data)
-      .then(() => waitForAuthResponse(_state));
+      .then(() => waitForResponse('SendMessageToWX.Resp'));
 }
 
 export function shareToSessionRequest(data) {
-  // Generate a random, unique state if not provided.
-  const _state = Math.random().toString(16).substr(2) + '_' + new Date().getTime();
   return nativeShareToSessionRequest(data)
-      .then(() => waitForAuthResponse(_state));
+      .then(() => waitForResponse('SendMessageToWX.Resp'));
 }
