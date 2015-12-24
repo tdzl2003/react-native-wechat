@@ -76,7 +76,7 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
     }
 
     @ReactMethod
-    public void isWXAppSupportApi(Callback resolve) {
+    public void isWXAppSupportApi(Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);
             return;
@@ -85,25 +85,25 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
     }
 
     @ReactMethod
-    public void getApiVersion(Callback resolve) {
+    public void getApiVersion(Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);
             return;
         }
-        resolve.invoke(null, api.getWXAppSupportAPI());
+        callback.invoke(null, api.getWXAppSupportAPI());
     }
 
     @ReactMethod
-    public void openWXApp(Callback resolve) {
+    public void openWXApp(Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);
             return;
         }
-        resolve.invoke(api.openWXApp() ? null : INVOKE_FAILED);
+        callback.invoke(api.openWXApp() ? null : INVOKE_FAILED);
     }
 
     @ReactMethod
-    public void sendAuthRequest(String scope, String state, Callback resolve) {
+    public void sendAuthRequest(String scope, String state, Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);
             return;
@@ -111,7 +111,7 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
         SendAuth.Req req = new SendAuth.Req();
         req.scope = scope;
         req.state = state;
-        resolve.invoke(api.sendReq(req) ? null : INVOKE_FAILED);
+        callback.invoke(api.sendReq(req) ? null : INVOKE_FAILED);
     }
 
     // TODO: 实现sendRequest、sendSuccessResponse、sendErrorCommonResponse、sendErrorUserCancelResponse
