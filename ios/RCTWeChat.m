@@ -7,11 +7,11 @@
 //
 
 
-#import "Base/RCTLog.h"
+#import "RCTLog.h"
 #import "RCTWeChat.h"
 #import "WXApi.h"
 #import "WXApiObject.h"
-#import "Base/RCTEventDispatcher.h"
+#import "RCTEventDispatcher.h"
 #import "RCTBridge.h"
 #import "RCTImageLoader.h"
 
