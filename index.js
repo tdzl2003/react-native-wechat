@@ -28,7 +28,7 @@ function waitForResponse(type) {
       savedCallback('User canceled.');
     }
     savedCallback = result => {
-      if (resp.type !== type) {
+      if (result.type !== type) {
         return;
       }
       savedCallback = undefined;
@@ -47,9 +47,6 @@ DeviceEventEmitter.addListener('WeChat_Resp', resp => {
   const callback = savedCallback;
   savedCallback = undefined;
   callback(resp);
-  if (__DEV__) {
-    throw new Error('Unsupported response type: ' + resp.type);
-  }
 });
 
 function wrapRegisterApp(nativeFunc) {
