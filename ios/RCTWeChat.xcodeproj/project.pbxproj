@@ -217,10 +217,10 @@
 		86D2384C1BD0BB9E00C75D01 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../react-native/React",
-					"$(SRCROOT)/../node_modules/react-native/React",
-					"$(SRCROOT)/../Example/node_modules/react-native/React",
+					"$(SRCROOT)/../../react-native/React/**",
+					"$(SRCROOT)/../../react-native/Libraries/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -235,10 +235,10 @@
 		86D2384D1BD0BB9E00C75D01 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../react-native/React",
-					"$(SRCROOT)/../node_modules/react-native/React",
-					"$(SRCROOT)/../Example/node_modules/react-native/React",
+					"$(SRCROOT)/../../react-native/React/**",
+					"$(SRCROOT)/../../react-native/Libraries/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
