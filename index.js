@@ -46,7 +46,7 @@ function waitForResponse(type) {
 DeviceEventEmitter.addListener('WeChat_Resp', resp => {
   const callback = savedCallback;
   savedCallback = undefined;
-  callback(resp);
+  callback && callback(resp);
 });
 
 function wrapRegisterApp(nativeFunc) {
@@ -103,16 +103,13 @@ export function sendAuthRequest(scopes, state) {
     _scopes = _scopes.join(',');
   }
   const _state = state || Math.random().toString(16).substr(2) + '_' + new Date().getTime();
-  return nativeSendAuthRequest(_scopes, _state)
-    .then(() => waitForResponse('SendAuth.Resp'));
+  return Promise.all([nativeSendAuthRequest(_scopes, _state), waitForResponse('SendAuth.Resp')]).then(v=>v[1]);
 }
 
 export function shareToTimelineRequest(data) {
-  return nativeShareToTimelineRequest(data)
-      .then(() => waitForResponse('SendMessageToWX.Resp'));
+  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToTimelineRequest(data)]).then(v=>v[1]);
 }
 
 export function shareToSessionRequest(data) {
-  return nativeShareToSessionRequest(data)
-      .then(() => waitForResponse('SendMessageToWX.Resp'));
+  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToSessionRequest(data)]).then(v=>v[1]);
 }
