@@ -103,13 +103,13 @@ export function sendAuthRequest(scopes, state) {
     _scopes = _scopes.join(',');
   }
   const _state = state || Math.random().toString(16).substr(2) + '_' + new Date().getTime();
-  return Promise.all([nativeSendAuthRequest(_scopes, _state), waitForResponse('SendAuth.Resp')]).then(v=>v[1]);
+  return Promise.all([waitForResponse('SendAuth.Resp'), nativeSendAuthRequest(_scopes, _state)]).then(v=>v[0]);
 }
 
 export function shareToTimelineRequest(data) {
-  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToTimelineRequest(data)]).then(v=>v[1]);
+  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToTimelineRequest(data)]).then(v=>v[0]);
 }
 
 export function shareToSessionRequest(data) {
-  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToSessionRequest(data)]).then(v=>v[1]);
+  return Promise.all([waitForResponse('SendMessageToWX.Resp'), nativeShareToSessionRequest(data)]).then(v=>v[0]);
 }
